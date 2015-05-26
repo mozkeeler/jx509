@@ -1,0 +1,22 @@
+{
+  "name": "jx509",
+  "version": "0.0.0",
+  "description": "POST a base64-encoded certificate, get JSON back",
+  "main": "index.js",
+  "dependencies": {
+    "node-forge": "~0.6.29"
+  },
+  "devDependencies": {},
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mozkeeler/jx509"
+  },
+  "keywords": [
+    "x509"
+  ],
+  "author": "David Keeler <mozkeeler@gmail.com>",
+  "license": "MPL 2.0",
+  "bugs": {
+    "url": "https://github.com/mozkeeler/jx509/issues"
+  }
+}
