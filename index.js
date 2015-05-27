@@ -167,10 +167,15 @@ function formatCRLDistributionPoints(cert) {
 }
 
 exports.x509ToJSON = function(base64) {
-  var pem = base64ToPEM(base64);
-  var cert = forge.pki.certificateFromPem(pem);
+  var cert = null;
+  try {
+    cert = forge.pki.certificateFromPem(base64);
+  } catch (e) {
+  }
   if (!cert) {
-    throw "Should be able to decode a simple certificate";
+    // Try again with the PEM header/footer
+    var pem = base64ToPEM(base64);
+    cert = forge.pki.certificateFromPem(pem);
   }
   console.log(cert);
   var certDER = forge.asn1.toDer(forge.pki.certificateToAsn1(cert)).getBytes();
