@@ -198,7 +198,7 @@ exports.x509ToJSON = function(base64) {
     ocsp: formatAuthorityInformationAccess(cert),
     crl: formatCRLDistributionPoints(cert),
   };
-  return result;
+  return JSON.stringify(result);
 };
 
 exports.powerOnSelfTest = function() {

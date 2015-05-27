@@ -3,6 +3,10 @@
   "version": "0.0.0",
   "description": "POST a base64-encoded certificate, get JSON back",
   "main": "index.js",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node test.js"
+  },
   "dependencies": {
     "node-forge": "~0.6.29"
   },

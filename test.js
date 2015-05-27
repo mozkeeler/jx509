@@ -1,3 +1,3 @@
-var jx509 = require('../jx509');
+var jx509 = require('./index.js');
 
 jx509.powerOnSelfTest();
