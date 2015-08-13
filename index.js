@@ -166,6 +166,16 @@ function formatCRLDistributionPoints(cert) {
   return output;
 }
 
+function formatPublicKey(cert) {
+  if (cert.publicKey.n) {
+    return "RSA " + cert.publicKey.n.bitLength() + " bits";
+  }
+  if (cert.publicKey.curve) {
+    return "EC " + oidToString(cert.publicKey.curve);
+  }
+  return "unknown key type";
+}
+
 exports.x509ToJSON = function(base64) {
   var cert = null;
   try {
@@ -195,8 +205,7 @@ exports.x509ToJSON = function(base64) {
     version: cert.version + 1,
     serialNumber: cert.serialNumber,
     signatureAlgorithm: oidToString(cert.signatureOid),
-    publicKeySize: cert.publicKey.n.bitLength(),
-    publicKeyPublicExponent: parseInt(cert.publicKey.e.toString(), 10),
+    publicKey: formatPublicKey(cert),
     basicConstraints: formatBasicConstraints(cert),
     keyUsage: formatKeyUsage(cert),
     extKeyUsage: formatExtKeyUsage(cert),
@@ -243,6 +252,7 @@ exports.powerOnSelfTest = function() {
             "I04ez4fFSCGAYhcoXmPB7pBpBeGbq+ihgWQisMCglR2YvtpIG8uN9Qv7uXEPONme" +
             "GQ==";
   */
+  /*
   var b64 = "MIIGwjCCBaqgAwIBAgIQCgTfIXRdTSuM6jNyBQBQ6TANBgkqhkiG9w0BAQUFADBl" +
             "MQswCQYDVQQGEwJVUzEVMBMGA1UEChMMRGlnaUNlcnQgSW5jMRkwFwYDVQQLExB3" +
             "d3cuZGlnaWNlcnQuY29tMSQwIgYDVQQDExtEaWdpQ2VydCBBc3N1cmVkIElEIFJv" +
@@ -280,6 +290,15 @@ exports.powerOnSelfTest = function() {
             "rVt8MbN3NcPkY/loCpgH50Y4d4TSPpe8CqCorCVPRG6R4dJar2vvMByNo0RCsxCL" +
             "I/rX5jV0N6zP66tYH8mII/821AfqNGpH6p2VbJ4pT1Pt4yuVIE4qz5ZgevgsgPCV" +
             "Us4ploFi";
+  */
+  var b64 = "MIIBXjCCAQOgAwIBAgIUf/ho98uapsYOR2WOtV526gbsI1kwCgYIKoZIzj0EAwIw" +
+            "HTEbMBkGA1UEAwwScm9vdF9zZWNwMjU2cjFfMjU2MCIYDzIwMTMwNjMwMDAwMDAw" +
+            "WhgPMjAxNjA3MDQwMDAwMDBaMB0xGzAZBgNVBAMMEnJvb3Rfc2VjcDI1NnIxXzI1" +
+            "NjBZMBMGByqGSM49AgEGCCqGSM49AwEHA0IABE+/u7th4Pj5saYKWayHBOLsBQtC" +
+            "Pjz3LpI/LE95S0VcKmnSM0VsNsQRnQcG4A7tyNGTkNeZG3stB6ME6qBKpsCjHTAb" +
+            "MAwGA1UdEwQFMAMBAf8wCwYDVR0PBAQDAgEGMAoGCCqGSM49BAMCA0kAMEYCIQDb" +
+            "bszMB0wjid7NagmYoJ2Oano6EIVhihlge9Z7Qi+3YgIhAPEJx2Ac3OklePzVLiQW" +
+            "FRYPss5YQVGRHL1UZYWYKDw5";
 
   var json = exports.x509ToJSON(b64);
   console.log(json);
