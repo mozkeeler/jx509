@@ -1,4 +1,5 @@
 var forge = require('node-forge');
+var atob = require('atob');
 
 function base64ToPEM(base64) {
   var chunks = base64.split(/(.{64})/);
@@ -24,7 +25,11 @@ function hashBytes(forgeDigestType, data) {
   var digest = forgeDigestType.create();
   digest.start();
   digest.update(data);
-  return digest.digest().toHex();
+  var hash = digest.digest()
+                   .toHex()
+                   .toUpperCase()
+                   .replace(/([A-F0-9]{2})/g, "$1:");
+  return hash.substring(0, hash.length - 1);
 }
 
 function oidToString(forgeOid) {
@@ -178,17 +183,21 @@ function formatPublicKey(cert) {
 
 exports.x509ToJSON = function(base64) {
   var cert = null;
+  var der = null;
   try {
     cert = forge.pki.certificateFromPem(base64);
+    der = atob(base64.replace(/-----BEGIN CERTIFICATE-----/, "")
+                     .replace(/-----END CERTIFICATE-----/, "")
+                     .replace(/[\r\n]/g, ""));
   } catch (e) {
   }
   if (!cert) {
     // Try again with the PEM header/footer
     var pem = base64ToPEM(base64);
     cert = forge.pki.certificateFromPem(pem);
+    der = atob(base64);
   }
   console.log(cert);
-  var certDER = forge.asn1.toDer(forge.pki.certificateToAsn1(cert)).getBytes();
   var result = {
     issuerCN: getDNField(cert.issuer, 'CN'),
     issuerOU: getDNField(cert.issuer, 'OU'),
@@ -198,8 +207,8 @@ exports.x509ToJSON = function(base64) {
     subjectOU: getDNField(cert.subject, 'OU'),
     subjectO: getDNField(cert.subject, 'O'),
     subjectC: getDNField(cert.subject, 'C'),
-    sha1Fingerprint: hashBytes(forge.md.sha1, certDER),
-    sha256Fingerprint: hashBytes(forge.md.sha256, certDER),
+    sha1Fingerprint: hashBytes(forge.md.sha1, der),
+    sha256Fingerprint: hashBytes(forge.md.sha256, der),
     notBefore: cert.validity.notBefore.toUTCString(),
     notAfter: cert.validity.notAfter.toUTCString(),
     version: cert.version + 1,
