@@ -1,5 +1,6 @@
 var forge = require('node-forge');
 var atob = require('atob');
+var fs = require('fs');
 
 function base64ToPEM(base64) {
   var chunks = base64.split(/(.{64})/);
@@ -181,6 +182,69 @@ function formatPublicKey(cert) {
   return "unknown key type";
 }
 
+// Finds all dNSName and iPAddress entries and returns:
+// {
+//    permitted: [entries],
+//    excluded: [entries]
+// }
+// where an entry is:
+// {
+//   type: <"dNSName"|"iPAddress">
+// }
+function searchNameConstraints(extensionValue) {
+  var permittedOut = [];
+  var excludedOut = [];
+  var nameConstraints = forge.asn1.fromDer(extensionValue);
+  var permittedSubtrees = nameConstraints.value[0];
+  for (var i = 0; permittedSubtrees && i < permittedSubtrees.value.length; i++) {
+    var entry = permittedSubtrees.value[i].value[0];
+    if (entry.type == 2) { // dNSName
+      permittedOut.push({type: "dNSName"});
+    }
+  }
+  var excludedSubtrees = nameConstraints.value[1];
+  for (var i = 0; excludedSubtrees && i < excludedSubtrees.value.length; i++) {
+    var entry = excludedSubtrees.value[i].value[0];
+    if (entry.type == 2) { // dNSName
+      excludedOut.push({type: "dNSName"});
+    }
+  }
+  return { permitted: [], excluded: [] };
+}
+
+// A certificate is technically constrained if it has the extendedKeyUsage
+// extension that does not contain anyExtendedKeyUsage and either does not
+// contain the serverAuth extended key usage or has the nameConstraints
+// extension with both dNSName and iPAddress entries.
+function determineIfTechnicallyConstrained(cert) {
+  var eku = findExtension(cert, "extKeyUsage");
+  if (!eku) {
+    return "no";
+  }
+  // id-ce OBJECT IDENTIFIER ::= { joint-iso-ccitt(2) ds(5) 29 }
+  // id-ce-extKeyUsage OBJECT IDENTIFIER ::= {id-ce 37}
+  // anyExtendedKeyUsage OBJECT IDENTIFIER ::= { id-ce-extKeyUsage 0 }
+  if ("2.5.29.37.0" in eku) {
+    return "no";
+  }
+  if (!("serverAuth" in eku)) {
+    return "yes";
+  }
+  var nameConstraints = findExtension(cert, "nameConstraints");
+  if (!nameConstraints) {
+    return "no";
+  }
+  var constraints = searchNameConstraints(nameConstraints.value);
+  var hasDNSName = constraints.permitted.some(function(entry) { return entry.type == "dNSName"; }) ||
+                   constraints.excluded.some(function(entry) { return entry.type == "dNSName"; });
+  var hasIPAddress = constraints.permitted.some(function(entry) { return entry.type == "iPAddress"; }) ||
+                     constraints.excluded.some(function(entry) { return entry.type == "iPAddress"; });
+  if (hasDNSName && hasIPAddress) {
+    return "yes";
+  }
+  return "no";
+}
+
 exports.x509ToJSON = function(base64) {
   var cert = null;
   var der = null;
@@ -197,7 +261,6 @@ exports.x509ToJSON = function(base64) {
     cert = forge.pki.certificateFromPem(pem);
     der = atob(base64);
   }
-  console.log(cert);
   var result = {
     issuerCN: getDNField(cert.issuer, 'CN'),
     issuerOU: getDNField(cert.issuer, 'OU'),
@@ -220,9 +283,28 @@ exports.x509ToJSON = function(base64) {
     extKeyUsage: formatExtKeyUsage(cert),
     ocsp: formatAuthorityInformationAccess(cert),
     crl: formatCRLDistributionPoints(cert),
+    technicallyConstrained: determineIfTechnicallyConstrained(cert),
   };
   return JSON.stringify(result);
 };
+
+function readCert(filename) {
+  var data = fs.readFileSync(filename);
+  return data.toString().replace(/[\r\n]/g, "")
+                        .replace(/-----BEGIN CERTIFICATE-----/, "")
+                        .replace(/-----END CERTIFICATE-----/, "");
+}
+
+function testField(filename, field, expectedValue) {
+  var data = fs.readFileSync(filename).toString();
+  var json = exports.x509ToJSON(data);
+  var parsed = JSON.parse(json);
+  if (parsed[field] != expectedValue) {
+    throw filename + " failed. Expected '" + expectedValue + "' got '" + parsed[field] + "'";
+  } else {
+    console.log(filename + " passed.");
+  }
+}
 
 exports.powerOnSelfTest = function() {
   /*
@@ -299,7 +381,6 @@ exports.powerOnSelfTest = function() {
             "rVt8MbN3NcPkY/loCpgH50Y4d4TSPpe8CqCorCVPRG6R4dJar2vvMByNo0RCsxCL" +
             "I/rX5jV0N6zP66tYH8mII/821AfqNGpH6p2VbJ4pT1Pt4yuVIE4qz5ZgevgsgPCV" +
             "Us4ploFi";
-  */
   var b64 = "MIIBXjCCAQOgAwIBAgIUf/ho98uapsYOR2WOtV526gbsI1kwCgYIKoZIzj0EAwIw" +
             "HTEbMBkGA1UEAwwScm9vdF9zZWNwMjU2cjFfMjU2MCIYDzIwMTMwNjMwMDAwMDAw" +
             "WhgPMjAxNjA3MDQwMDAwMDBaMB0xGzAZBgNVBAMMEnJvb3Rfc2VjcDI1NnIxXzI1" +
@@ -308,7 +389,12 @@ exports.powerOnSelfTest = function() {
             "MAwGA1UdEwQFMAMBAf8wCwYDVR0PBAQDAgEGMAoGCCqGSM49BAMCA0kAMEYCIQDb" +
             "bszMB0wjid7NagmYoJ2Oano6EIVhihlge9Z7Qi+3YgIhAPEJx2Ac3OklePzVLiQW" +
             "FRYPss5YQVGRHL1UZYWYKDw5";
-
   var json = exports.x509ToJSON(b64);
   console.log(json);
+  */
+  testField("tc-NameConstraints-no-iPAddress.pem", "technicallyConstrained", "no");
+  testField("tc-anyEKU.pem", "technicallyConstrained", "no");
+  testField("tc-noEKU.pem", "technicallyConstrained", "no");
+  testField("tc-noNameConstraints.pem", "technicallyConstrained", "no");
+  testField("tc-noServerAuth.pem", "technicallyConstrained", "yes");
 };
