@@ -200,6 +200,8 @@ function searchNameConstraints(extensionValue) {
     var entry = permittedSubtrees.value[i].value[0];
     if (entry.type == 2) { // dNSName
       permittedOut.push({type: "dNSName"});
+    } else if (entry.type == 7) { // iPAddress
+      permittedOut.push({type: "iPAddress"});
     }
   }
   var excludedSubtrees = nameConstraints.value[1];
@@ -207,9 +209,11 @@ function searchNameConstraints(extensionValue) {
     var entry = excludedSubtrees.value[i].value[0];
     if (entry.type == 2) { // dNSName
       excludedOut.push({type: "dNSName"});
+    } else if (entry.type == 7) { // iPAddress
+      excludedOut.push({type: "iPAddress"});
     }
   }
-  return { permitted: [], excluded: [] };
+  return { permitted: permittedOut, excluded: excludedOut };
 }
 
 // A certificate is technically constrained if it has the extendedKeyUsage
@@ -397,4 +401,5 @@ exports.powerOnSelfTest = function() {
   testField("tc-noEKU.pem", "technicallyConstrained", "no");
   testField("tc-noNameConstraints.pem", "technicallyConstrained", "no");
   testField("tc-noServerAuth.pem", "technicallyConstrained", "yes");
+  testField("tc-properlyConstrained.pem", "technicallyConstrained", "yes");
 };
