@@ -192,25 +192,19 @@ function formatPublicKey(cert) {
 //   type: <"dNSName"|"iPAddress">
 // }
 function searchNameConstraints(extensionValue) {
+  var nameConstraints = forge.asn1.fromDer(extensionValue);
   var permittedOut = [];
   var excludedOut = [];
-  var nameConstraints = forge.asn1.fromDer(extensionValue);
-  var permittedSubtrees = nameConstraints.value[0];
-  for (var i = 0; permittedSubtrees && i < permittedSubtrees.value.length; i++) {
-    var entry = permittedSubtrees.value[i].value[0];
-    if (entry.type == 2) { // dNSName
-      permittedOut.push({type: "dNSName"});
-    } else if (entry.type == 7) { // iPAddress
-      permittedOut.push({type: "iPAddress"});
-    }
-  }
-  var excludedSubtrees = nameConstraints.value[1];
-  for (var i = 0; excludedSubtrees && i < excludedSubtrees.value.length; i++) {
-    var entry = excludedSubtrees.value[i].value[0];
-    if (entry.type == 2) { // dNSName
-      excludedOut.push({type: "dNSName"});
-    } else if (entry.type == 7) { // iPAddress
-      excludedOut.push({type: "iPAddress"});
+  for (var i in nameConstraints.value) {
+    var subtree = nameConstraints.value[i];
+    var outlist = subtree.type == 0 ? permittedOut : excludedOut;
+    for (var i = 0; i < subtree.value.length; i++) {
+      var entry = subtree.value[i].value[0];
+      if (entry.type == 2) { // dNSName
+        outlist.push({type: "dNSName"});
+      } else if (entry.type == 7) { // iPAddress
+        outlist.push({type: "iPAddress"});
+      }
     }
   }
   return { permitted: permittedOut, excluded: excludedOut };
@@ -402,4 +396,5 @@ exports.powerOnSelfTest = function() {
   testField("tc-noNameConstraints.pem", "technicallyConstrained", "no");
   testField("tc-noServerAuth.pem", "technicallyConstrained", "yes");
   testField("tc-properlyConstrained.pem", "technicallyConstrained", "yes");
+  testField("tc-properlyConstrained-excluded.pem", "technicallyConstrained", "yes");
 };
