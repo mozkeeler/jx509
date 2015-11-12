@@ -20,6 +20,7 @@ var server = http.createServer(function(req, res) {
     });
     req.on('end', function() {
       res.writeHead(200, {'Content-Type': 'text/plain',
+                          'Charset': 'utf-8',
                           'Access-Control-Allow-Origin': '*'});
       res.end(base64ToJSON(base64));
     });
@@ -29,6 +30,7 @@ var server = http.createServer(function(req, res) {
     console.log(parsed);
     var base64 = querystring.parse(req.url.slice(1)).base64;
     res.writeHead(200, {'Content-Type': 'text/plain',
+                        'Charset': 'utf-8',
                         'Access-Control-Allow-Origin': '*'});
     res.end(base64ToJSON(base64));
   }

@@ -17,7 +17,7 @@ function base64ToPEM(base64) {
 function getDNField(dn, field) {
   var field = dn.getField(field);
   if (field) {
-    return field.value;
+    return forge.util.decodeUtf8(field.value);
   }
   return null;
 }
@@ -397,4 +397,5 @@ exports.powerOnSelfTest = function() {
   testField("tc-noServerAuth.pem", "technicallyConstrained", "yes");
   testField("tc-properlyConstrained.pem", "technicallyConstrained", "yes");
   testField("tc-properlyConstrained-excluded.pem", "technicallyConstrained", "yes");
+  testField("wosign.pem", "issuerCN", "CA 沃通根证书");
 };
