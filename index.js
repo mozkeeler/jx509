@@ -390,6 +390,34 @@ exports.powerOnSelfTest = function() {
   var json = exports.x509ToJSON(b64);
   console.log(json);
   */
+
+  var b64 = "MIIBijCCARCgAwIBAgIUAbIDu0PiOeLpYylsmbkDjYURErIwCgYIKoZIzj0EAwIw" +
+            "FTETMBEGA1UEAwwKRUNDIElzc3VlcjAiGA8yMDEzMDYzMDAwMDAwMFoYDzIwMTYw" +
+            "NzA0MDAwMDAwWjAVMRMwEQYDVQQDDApFQ0MgSXNzdWVyMHYwEAYHKoZIzj0CAQYF" +
+            "K4EEACIDYgAEoWhyQzYrXHsYifN5FUYVocc/tI3uhj4CKRXbYI4lLeS3Ey2ozpjo" +
+            "MVNOapwMCwnI1jmt6DIG5bqBNHOhH6Mw4F2oyW5Dg/4nhz2pcQO+KIjP8ALwWvca" +
+            "H93Mg3SqbqnOox0wGzAMBgNVHRMEBTADAQH/MAsGA1UdDwQEAwIBBjAKBggqhkjO" +
+            "PQQDAgNoADBlAjAT9KCx2CIAub1HyVnOHAoWjS00zIb/rWu63gn2ScAVbh9IXaJM" +
+            "qwDltowh8LobFCACMQDsm0BCVr8XM0Y+uV9D/OSJg5bctulVrpuGH9SnyNlwvePZ" +
+            "sUYKFU0tvYq1XaiWbMU=";
+  console.log(exports.x509ToJSON(b64));
+  var b64 = "MIIC6jCCAo+gAwIBAgIORnQ3dg5KdDZs0nyFZk4wCgYIKoZIzj0EAwIwUDEkMCIG" +
+            "A1UECxMbR2xvYmFsU2lnbiBFQ0MgUm9vdCBDQSAtIFI0MRMwEQYDVQQKEwpHbG9i" +
+            "YWxTaWduMRMwEQYDVQQDEwpHbG9iYWxTaWduMB4XDTE1MDQzMDAwMDAwMFoXDTI1" +
+            "MDQzMDAwMDAwMFowUzELMAkGA1UEBhMCQkUxGTAXBgNVBAoTEEdsb2JhbFNpZ24g" +
+            "bnYtc2ExKTAnBgNVBAMTIEdsb2JhbFNpZ24gRUNDMjU2IEVWIFNTTCBDQSAtIEcz" +
+            "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEPy/rcbCWvtFLAfga+b/phoir5r+G" +
+            "vbKBZ72OSYZx4uDza2ILWld/FQMb1QVTAwt784gPthg9YI5iNipcqWWr36OCAUgw" +
+            "ggFEMA4GA1UdDwEB/wQEAwIBBjAdBgNVHSUEFjAUBggrBgEFBQcDAQYIKwYBBQUH" +
+            "AwIwEgYDVR0TAQH/BAgwBgEB/wIBADAdBgNVHQ4EFgQUz6S0pmAxY/7dTvCThgHL" +
+            "AH0mF0swHwYDVR0jBBgwFoAUVLB7rUW44kB/+wpu+74zyTyjhNUwPgYIKwYBBQUH" +
+            "AQEEMjAwMC4GCCsGAQUFBzABhiJodHRwOi8vb2NzcDIuZ2xvYmFsc2lnbi5jb20v" +
+            "cm9vdHI0MDYGA1UdHwQvMC0wK6ApoCeGJWh0dHA6Ly9jcmwuZ2xvYmFsc2lnbi5j" +
+            "b20vcm9vdC1yNC5jcmwwRwYDVR0gBEAwPjA8BgRVHSAAMDQwMgYIKwYBBQUHAgEW" +
+            "Jmh0dHBzOi8vd3d3Lmdsb2JhbHNpZ24uY29tL3JlcG9zaXRvcnkvMAoGCCqGSM49" +
+            "BAMCA0kAMEYCIQCs/+WRtZUMXThvApK15FUybz6UEbVyaf9kicEyKTaqNQIhAJe4" +
+            "pf88Jpi2NFg+v8PShVUYlgAlLMJe+aOwMRRxxefw";
+  console.log(exports.x509ToJSON(b64));
   testField("tc-NameConstraints-no-iPAddress.pem", "technicallyConstrained", "no");
   testField("tc-anyEKU.pem", "technicallyConstrained", "no");
   testField("tc-noEKU.pem", "technicallyConstrained", "no");
