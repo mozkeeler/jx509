@@ -267,26 +267,11 @@ function determineIfTechnicallyConstrained(cert) {
 // ... etc.
 // or base64 of a single certificate
 function splitCertChain(chain) {
-  var lines = chain.split(/[\r\n]/);
-  var certs = [];
-  var inCert = false;
-  var currentCert = "";
-  for (var i in lines) {
-    var line = lines[i];
-    if (inCert) {
-      if (line == "-----END CERTIFICATE-----") {
-        inCert = false;
-        if (currentCert) {
-          certs.push(currentCert);
-          currentCert = "";
-        }
-      } else {
-        currentCert += line;
-      }
-    } else if (line == "-----BEGIN CERTIFICATE-----") {
-      inCert = true;
-    }
-  }
+  var blob = chain.replace(/[\r\n]/g, "");
+  // the ?: indicates a non-capturing group (so split won't include
+  // matched captures in its output)
+  var certs = blob.split(/-----(?:BEGIN|END) CERTIFICATE-----/)
+                  .filter(function(str) { return str.length > 0; });
   return certs.length > 0 ? certs : [chain];
 };
 
