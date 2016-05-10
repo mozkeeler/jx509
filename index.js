@@ -196,6 +196,16 @@ function formatPublicKey(cert) {
   return "unknown key type";
 }
 
+function formatPublicKeyAlgorithm(cert) {
+  if (cert.publicKey.n) {
+    return "RSA";
+  }
+  if (cert.publicKey.curve) {
+    return "EC";
+  }
+  return "unknown key algorithm";
+}
+
 // Finds all dNSName and iPAddress entries and returns:
 // {
 //    permitted: [entries],
@@ -291,6 +301,7 @@ exports.x509ToJSON = function(base64) {
     signatureAlgorithm: oidToString(cert.signatureOid),
     signatureHashAlgorithm: signatureOidToHashAlgorithm(cert.signatureOid),
     publicKey: formatPublicKey(cert),
+    publicKeyAlgorithm: formatPublicKeyAlgorithm(cert),
     basicConstraints: formatBasicConstraints(cert),
     keyUsage: formatKeyUsage(cert),
     extKeyUsage: formatExtKeyUsage(cert),
@@ -315,7 +326,7 @@ function testField(filename, field, expectedValue) {
   if (parsed[field] != expectedValue) {
     throw filename + " failed. Expected '" + expectedValue + "' got '" + parsed[field] + "'";
   } else {
-    console.log(filename + " passed.");
+    console.log(filename + "/" + field + " passed.");
   }
 }
 
@@ -442,5 +453,8 @@ exports.powerOnSelfTest = function() {
   testField("tc-properlyConstrained-excluded.pem", "technicallyConstrained", "yes");
   testField("wosign.pem", "issuerCN", "CA 沃通根证书");
   testField("wosign.pem", "signatureHashAlgorithm", "sha256");
+  testField("wosign.pem", "publicKeyAlgorithm", "RSA");
   testField("GlobalSignECC256.pem", "signatureHashAlgorithm", "sha256");
+  testField("GlobalSignECC256.pem", "publicKeyAlgorithm", "EC");
+  testField("sha1.pem", "signatureHashAlgorithm", "sha1");
 };
