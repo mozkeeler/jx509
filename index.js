@@ -257,37 +257,9 @@ function determineIfTechnicallyConstrained(cert) {
   return "no";
 }
 
-// where chain is a string of the format:
-// -----BEGIN CERTIFICATE-----
-// ... base64...
-// -----END CERTIFICATE-----
-// -----BEGIN CERTIFICATE-----
-// ... base64...
-// -----END CERTIFICATE-----
-// ... etc.
-// or base64 of a single certificate
-function splitCertChain(chain) {
-  var blob = chain.replace(/[\r\n]/g, "");
-  // the ?: indicates a non-capturing group (so split won't include
-  // matched captures in its output)
-  var certs = blob.split(/-----(?:BEGIN|END) CERTIFICATE-----/)
-                  .filter(function(str) { return str.length > 0; });
-  return certs.length > 0 ? certs : [chain];
-};
-
 exports.x509ToJSON = function(base64) {
-  var chain = splitCertChain(base64);
-  var results = [];
-  for (var i in chain) {
-    results.push(extractCertificateInformation(chain[i]));
-  }
-  return JSON.stringify(results);
-};
-
-function extractCertificateInformation(base64) {
   var cert = null;
   var der = null;
-  // base64 might actually be PEM, so try that.
   try {
     cert = forge.pki.certificateFromPem(base64);
     der = atob(base64.replace(/-----BEGIN CERTIFICATE-----/, "")
@@ -296,7 +268,7 @@ function extractCertificateInformation(base64) {
   } catch (e) {
   }
   if (!cert) {
-    // Try again, this time adding in the PEM header/footer.
+    // Try again with the PEM header/footer
     var pem = base64ToPEM(base64);
     cert = forge.pki.certificateFromPem(pem);
     der = atob(base64);
@@ -326,8 +298,8 @@ function extractCertificateInformation(base64) {
     crl: formatCRLDistributionPoints(cert),
     technicallyConstrained: determineIfTechnicallyConstrained(cert),
   };
-  return result;
-}
+  return JSON.stringify(result);
+};
 
 function readCert(filename) {
   var data = fs.readFileSync(filename);
@@ -339,7 +311,7 @@ function readCert(filename) {
 function testField(filename, field, expectedValue) {
   var data = fs.readFileSync(filename).toString();
   var json = exports.x509ToJSON(data);
-  var parsed = JSON.parse(json)[0];
+  var parsed = JSON.parse(json);
   if (parsed[field] != expectedValue) {
     throw filename + " failed. Expected '" + expectedValue + "' got '" + parsed[field] + "'";
   } else {
@@ -348,6 +320,7 @@ function testField(filename, field, expectedValue) {
 }
 
 exports.powerOnSelfTest = function() {
+  /*
   var b64 = "MIIGLTCCBRWgAwIBAgIIGN2Hrh9LtmwwDQYJKoZIhvcNAQEFBQAwgZUxCzAJBgNV" +
             "BAYTAkdSMUQwQgYDVQQKEztIZWxsZW5pYyBBY2FkZW1pYyBhbmQgUmVzZWFyY2gg" +
             "SW5zdGl0dXRpb25zIENlcnQuIEF1dGhvcml0eTFAMD4GA1UEAxM3SGVsbGVuaWMg" +
@@ -382,7 +355,7 @@ exports.powerOnSelfTest = function() {
             "Av60uayq9P+G4tvojJSYIzRv7vEGFJYp8sYON/XJUWXCctxiJ+Tury9WueBkps/c" +
             "I04ez4fFSCGAYhcoXmPB7pBpBeGbq+ihgWQisMCglR2YvtpIG8uN9Qv7uXEPONme" +
             "GQ==";
-  console.log(exports.x509ToJSON(b64));
+  */
   /*
   var b64 = "MIIGwjCCBaqgAwIBAgIQCgTfIXRdTSuM6jNyBQBQ6TANBgkqhkiG9w0BAQUFADBl" +
             "MQswCQYDVQQGEwJVUzEVMBMGA1UEChMMRGlnaUNlcnQgSW5jMRkwFwYDVQQLExB3" +
