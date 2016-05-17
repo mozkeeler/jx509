@@ -102,14 +102,16 @@ function formatExtKeyUsage(cert) {
   if (!extension) {
     return "(not present)";
   }
+  var skip = ["id", "critical", "value", "name"];
   var output = "";
-  // todo: include OCSPSigning
-  ["serverAuth", "clientAuth", "codeSigning", "emailProtection",
-   "timeStamping"].forEach(function(keyUsage) {
-     if (extension[keyUsage]) {
-       output += (output ? ", " : "") + keyUsage;
+  Object.keys(extension).forEach(function(key) {
+    if (skip.indexOf(key) != -1) {
+      return;
+    }
+     if (extension[key]) {
+       output += (output ? ", " : "") + key;
      }
-   });
+  });
   return output;
 }
 
@@ -446,9 +448,12 @@ exports.powerOnSelfTest = function() {
   console.log(exports.x509ToJSON(b64));
   testField("tc-NameConstraints-no-iPAddress.pem", "technicallyConstrained", "no");
   testField("tc-anyEKU.pem", "technicallyConstrained", "no");
+  testField("tc-anyEKU.pem", "extKeyUsage", "clientAuth, 2.5.29.37.0");
   testField("tc-noEKU.pem", "technicallyConstrained", "no");
+  testField("tc-noEKU.pem", "extKeyUsage", "(not present)");
   testField("tc-noNameConstraints.pem", "technicallyConstrained", "no");
   testField("tc-noServerAuth.pem", "technicallyConstrained", "yes");
+  testField("tc-noServerAuth.pem", "extKeyUsage", "clientAuth, timeStamping");
   testField("tc-properlyConstrained.pem", "technicallyConstrained", "yes");
   testField("tc-properlyConstrained-excluded.pem", "technicallyConstrained", "yes");
   testField("wosign.pem", "issuerCN", "CA 沃通根证书");
@@ -457,4 +462,5 @@ exports.powerOnSelfTest = function() {
   testField("GlobalSignECC256.pem", "signatureHashAlgorithm", "sha256");
   testField("GlobalSignECC256.pem", "publicKeyAlgorithm", "EC");
   testField("sha1.pem", "signatureHashAlgorithm", "sha1");
+  testField("nsSGC-example.pem", "extKeyUsage", "1.3.6.1.4.1.311.10.3.3, 2.16.840.1.113730.4.1");
 };
