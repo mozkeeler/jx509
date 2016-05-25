@@ -240,6 +240,9 @@ function searchNameConstraints(extensionValue) {
 // extension that does not contain anyExtendedKeyUsage and either does not
 // contain the serverAuth extended key usage or has the nameConstraints
 // extension with both dNSName and iPAddress entries.
+// For certificates with a notBefore before 23 August 2016, the
+// id-Netscape-stepUp OID (aka Netscape Server Gated Crypto ("nsSGC")) is
+// treated as equivalent to id-kp-serverAuth.
 function determineIfTechnicallyConstrained(cert) {
   var eku = findExtension(cert, "extKeyUsage");
   if (!eku) {
@@ -251,8 +254,17 @@ function determineIfTechnicallyConstrained(cert) {
   if ("2.5.29.37.0" in eku) {
     return "no";
   }
+  // id-Netscape        OBJECT IDENTIFIER ::= { 2 16 840 1 113730 }
+  // id-Netscape-policy OBJECT IDENTIFIER ::= { id-Netscape 4 }
+  // id-Netscape-stepUp OBJECT IDENTIFIER ::= { id-Netscape-policy 1 }
   if (!("serverAuth" in eku)) {
-    return "yes";
+    if (cert.validity.notBefore < new Date("2016-08-23T00:00:00.000Z")) {
+      if (!("2.16.840.1.113730" in eku)) {
+        return "yes";
+      }
+    } else {
+      return "yes";
+    }
   }
   var nameConstraints = findExtension(cert, "nameConstraints");
   if (!nameConstraints) {
@@ -463,4 +475,8 @@ exports.powerOnSelfTest = function() {
   testField("GlobalSignECC256.pem", "publicKeyAlgorithm", "EC");
   testField("sha1.pem", "signatureHashAlgorithm", "sha1");
   testField("nsSGC-example.pem", "extKeyUsage", "1.3.6.1.4.1.311.10.3.3, 2.16.840.1.113730.4.1");
+  testField("nsSGC-example.pem", "technicallyConstrained", "yes");
+  testField("int-nsSGC-recent.pem", "technicallyConstrained", "yes");
+  testField("tc-nsSGC-constrained-old.pem", "technicallyConstrained", "yes");
+  testField("tc-nsSGC-constrained-recent.pem", "technicallyConstrained", "yes");
 };
