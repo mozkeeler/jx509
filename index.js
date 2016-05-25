@@ -257,14 +257,11 @@ function determineIfTechnicallyConstrained(cert) {
   // id-Netscape        OBJECT IDENTIFIER ::= { 2 16 840 1 113730 }
   // id-Netscape-policy OBJECT IDENTIFIER ::= { id-Netscape 4 }
   // id-Netscape-stepUp OBJECT IDENTIFIER ::= { id-Netscape-policy 1 }
-  if (!("serverAuth" in eku)) {
-    if (cert.validity.notBefore < new Date("2016-08-23T00:00:00.000Z")) {
-      if (!("2.16.840.1.113730" in eku)) {
-        return "yes";
-      }
-    } else {
-      return "yes";
-    }
+  var hasServerAuth = "serverAuth" in eku;
+  var stepUpEquivalentToServerAuth = cert.validity.notBefore < new Date("2016-08-23T00:00:00.000Z");
+  var hasStepUp = "2.16.840.1.113730.4.1" in eku;
+  if (!(hasServerAuth || (stepUpEquivalentToServerAuth && hasStepUp))) {
+    return "yes";
   }
   var nameConstraints = findExtension(cert, "nameConstraints");
   if (!nameConstraints) {
@@ -475,8 +472,9 @@ exports.powerOnSelfTest = function() {
   testField("GlobalSignECC256.pem", "publicKeyAlgorithm", "EC");
   testField("sha1.pem", "signatureHashAlgorithm", "sha1");
   testField("nsSGC-example.pem", "extKeyUsage", "1.3.6.1.4.1.311.10.3.3, 2.16.840.1.113730.4.1");
-  testField("nsSGC-example.pem", "technicallyConstrained", "yes");
+  testField("nsSGC-example.pem", "technicallyConstrained", "no");
   testField("int-nsSGC-recent.pem", "technicallyConstrained", "yes");
+  testField("int-nsSGC-old.pem", "technicallyConstrained", "no");
   testField("tc-nsSGC-constrained-old.pem", "technicallyConstrained", "yes");
   testField("tc-nsSGC-constrained-recent.pem", "technicallyConstrained", "yes");
 };
