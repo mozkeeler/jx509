@@ -97,6 +97,17 @@ function formatKeyUsage(cert) {
   return output;
 }
 
+// special-case msSGC and nsSGC for display purposes
+function formatEKUOID(ekuOID) {
+  if (ekuOID == "1.3.6.1.4.1.311.10.3.3") {
+    return "msSGC";
+  }
+  if (ekuOID == "2.16.840.1.113730.4.1") {
+    return "nsSGC";
+  }
+  return ekuOID;
+}
+
 function formatExtKeyUsage(cert) {
   var extension = findExtension(cert, "extKeyUsage");
   if (!extension) {
@@ -108,9 +119,9 @@ function formatExtKeyUsage(cert) {
     if (skip.indexOf(key) != -1) {
       return;
     }
-     if (extension[key]) {
-       output += (output ? ", " : "") + key;
-     }
+    if (extension[key]) {
+      output += (output ? ", " : "") + formatEKUOID(key);
+    }
   });
   return output;
 }
@@ -471,7 +482,7 @@ exports.powerOnSelfTest = function() {
   testField("GlobalSignECC256.pem", "signatureHashAlgorithm", "sha256");
   testField("GlobalSignECC256.pem", "publicKeyAlgorithm", "EC");
   testField("sha1.pem", "signatureHashAlgorithm", "sha1");
-  testField("nsSGC-example.pem", "extKeyUsage", "1.3.6.1.4.1.311.10.3.3, 2.16.840.1.113730.4.1");
+  testField("nsSGC-example.pem", "extKeyUsage", "msSGC, nsSGC");
   testField("nsSGC-example.pem", "technicallyConstrained", "no");
   testField("int-nsSGC-recent.pem", "technicallyConstrained", "yes");
   testField("int-nsSGC-old.pem", "technicallyConstrained", "no");
