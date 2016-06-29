@@ -226,7 +226,8 @@ function formatPublicKeyAlgorithm(cert) {
 // }
 // where an entry is:
 // {
-//   type: <"dNSName"|"iPAddress">
+//   type: <"dNSName"|"iPAddress">,
+//   value: <value of the entry>
 // }
 function searchNameConstraints(extensionValue) {
   var nameConstraints = forge.asn1.fromDer(extensionValue);
@@ -238,9 +239,9 @@ function searchNameConstraints(extensionValue) {
     for (var i = 0; i < subtree.value.length; i++) {
       var entry = subtree.value[i].value[0];
       if (entry.type == 2) { // dNSName
-        outlist.push({type: "dNSName"});
+        outlist.push({type: "dNSName", value: entry.value});
       } else if (entry.type == 7) { // iPAddress
-        outlist.push({type: "iPAddress"});
+        outlist.push({type: "iPAddress", value: entry.value});
       }
     }
   }
@@ -281,9 +282,25 @@ function determineIfTechnicallyConstrained(cert) {
   var constraints = searchNameConstraints(nameConstraints.value);
   var hasDNSName = constraints.permitted.some(function(entry) { return entry.type == "dNSName"; }) ||
                    constraints.excluded.some(function(entry) { return entry.type == "dNSName"; });
-  var hasIPAddress = constraints.permitted.some(function(entry) { return entry.type == "iPAddress"; }) ||
-                     constraints.excluded.some(function(entry) { return entry.type == "iPAddress"; });
-  if (hasDNSName && hasIPAddress) {
+  // For iPAddresses, both IPv4 and IPv6 constraints must be present.
+  // If present in excludedSubtrees, the constraints must cover the entire
+  // range (0.0.0.0/0 for IPv4 and ::0/0 for IPv6).
+  var hasIPv4Address = constraints.permitted.some(function(entry) {
+      return entry.type == "iPAddress" && entry.value.length == 8; }) ||
+    constraints.excluded.some(function(entry) {
+      return entry.type == "iPAddress" && entry.value.length == 8 &&
+             entry.value == "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000";
+    });
+  var hasIPv6Address = constraints.permitted.some(function(entry) {
+      return entry.type == "iPAddress" && entry.value.length == 32; }) ||
+    constraints.excluded.some(function(entry) {
+      return entry.type == "iPAddress" && entry.value.length == 32 &&
+             entry.value == "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000" +
+                            "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000" +
+                            "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000" +
+                            "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000";
+    });
+  if (hasDNSName && hasIPv4Address && hasIPv6Address) {
     return "yes";
   }
   return "no";
@@ -439,6 +456,7 @@ exports.powerOnSelfTest = function() {
   console.log(json);
   */
 
+  /*
   var b64 = "MIIBijCCARCgAwIBAgIUAbIDu0PiOeLpYylsmbkDjYURErIwCgYIKoZIzj0EAwIw" +
             "FTETMBEGA1UEAwwKRUNDIElzc3VlcjAiGA8yMDEzMDYzMDAwMDAwMFoYDzIwMTYw" +
             "NzA0MDAwMDAwWjAVMRMwEQYDVQQDDApFQ0MgSXNzdWVyMHYwEAYHKoZIzj0CAQYF" +
@@ -466,6 +484,7 @@ exports.powerOnSelfTest = function() {
             "BAMCA0kAMEYCIQCs/+WRtZUMXThvApK15FUybz6UEbVyaf9kicEyKTaqNQIhAJe4" +
             "pf88Jpi2NFg+v8PShVUYlgAlLMJe+aOwMRRxxefw";
   console.log(exports.x509ToJSON(b64));
+  */
   testField("tc-NameConstraints-no-iPAddress.pem", "technicallyConstrained", "no");
   testField("tc-anyEKU.pem", "technicallyConstrained", "no");
   testField("tc-anyEKU.pem", "extKeyUsage", "clientAuth, 2.5.29.37.0");
