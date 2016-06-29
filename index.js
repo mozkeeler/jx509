@@ -282,25 +282,24 @@ function determineIfTechnicallyConstrained(cert) {
   var constraints = searchNameConstraints(nameConstraints.value);
   var hasDNSName = constraints.permitted.some(function(entry) { return entry.type == "dNSName"; }) ||
                    constraints.excluded.some(function(entry) { return entry.type == "dNSName"; });
-  // For iPAddresses, both IPv4 and IPv6 constraints must be present.
-  // If present in excludedSubtrees, the constraints must cover the entire
-  // range (0.0.0.0/0 for IPv4 and ::0/0 for IPv6).
-  var hasIPv4Address = constraints.permitted.some(function(entry) {
-      return entry.type == "iPAddress" && entry.value.length == 8; }) ||
+  var hasIPAddressInPermittedSubtrees =
+    constraints.permitted.some(function(entry) { return entry.type == "iPAddress"; });
+  // For iPAddresses in excludedSubtrees, both IPv4 and IPv6 must be present
+  // and the constraints must cover the entire range (0.0.0.0/0 for IPv4 and
+  // ::0/0 for IPv6).
+  var hasIPAddressesInExcludedSubtrees =
     constraints.excluded.some(function(entry) {
-      return entry.type == "iPAddress" && entry.value.length == 8 &&
-             entry.value == "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000";
-    });
-  var hasIPv6Address = constraints.permitted.some(function(entry) {
-      return entry.type == "iPAddress" && entry.value.length == 32; }) ||
+      return entry.type == "iPAddress" &&
+             entry.value == "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000"; }) &&
     constraints.excluded.some(function(entry) {
-      return entry.type == "iPAddress" && entry.value.length == 32 &&
+      return entry.type == "iPAddress" &&
              entry.value == "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000" +
                             "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000" +
                             "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000" +
                             "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000";
-    });
-  if (hasDNSName && hasIPv4Address && hasIPv6Address) {
+  });
+  if (hasDNSName && (hasIPAddressInPermittedSubtrees ||
+                     hasIPAddressesInExcludedSubtrees)) {
     return "yes";
   }
   return "no";
