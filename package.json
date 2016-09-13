@@ -8,7 +8,7 @@
     "test": "node test.js"
   },
   "dependencies": {
-    "node-forge": "~0.6.29"
+    "atob": "^2.0.3"
   },
   "devDependencies": {},
   "repository": {

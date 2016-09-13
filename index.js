@@ -1,4 +1,4 @@
-var forge = require('node-forge');
+var forge = require('./node-forge/js/forge.js');
 var atob = require('atob');
 var fs = require('fs');
 
