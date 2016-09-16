@@ -930,9 +930,11 @@ pki.createCertificate = function() {
   };
   cert.subject.attributes = [];
   cert.subject.hash = null;
+  cert.subjectDER = null;
 
   cert.extensions = [];
   cert.publicKey = null;
+  cert.spkiDER = null;
   cert.md = null;
 
   /**
@@ -1385,6 +1387,7 @@ pki.certificateFromAsn1 = function(obj, computeHash) {
     cert.subject.uniqueId = capture.certSubjectUniqueId;
   }
   cert.subject.hash = smd.digest().toHex();
+  cert.subjectDER = asn1.toDer(capture.certSubject).data;
 
   // handle extensions
   if(capture.certExtensions) {
@@ -1395,6 +1398,7 @@ pki.certificateFromAsn1 = function(obj, computeHash) {
 
   // convert RSA public key from ASN.1
   cert.publicKey = pki.publicKeyFromAsn1(capture.subjectPublicKeyInfo);
+  cert.spkiDER = asn1.toDer(capture.subjectPublicKeyInfo).data;
 
   return cert;
 };

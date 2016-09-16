@@ -1,5 +1,6 @@
 var forge = require('./node-forge/js/forge.js');
 var atob = require('atob');
+var btoa = require('btoa');
 var fs = require('fs');
 
 function signatureOidToHashAlgorithm(signatureOid) {
@@ -305,6 +306,14 @@ function determineIfTechnicallyConstrained(cert) {
   return "no";
 }
 
+// Returns base64(SHA-256(der(cert.subject) || der(cert.spki)))
+function makeCertID(cert) {
+  let digest = forge.md.sha256.create();
+  digest.update(cert.subjectDER);
+  digest.update(cert.spkiDER);
+  return btoa(digest.digest().bytes());
+}
+
 exports.x509ToJSON = function(base64) {
   var cert = null;
   var der = null;
@@ -346,6 +355,7 @@ exports.x509ToJSON = function(base64) {
     ocsp: formatAuthorityInformationAccess(cert),
     crl: formatCRLDistributionPoints(cert),
     technicallyConstrained: determineIfTechnicallyConstrained(cert),
+    certID: makeCertID(cert),
   };
   return JSON.stringify(result);
 };
@@ -506,4 +516,6 @@ exports.powerOnSelfTest = function() {
   testField("int-nsSGC-old.pem", "technicallyConstrained", "no");
   testField("tc-nsSGC-constrained-old.pem", "technicallyConstrained", "yes");
   testField("tc-nsSGC-constrained-recent.pem", "technicallyConstrained", "yes");
+  testField("EntrustRootCertificationAuthority-EC1.cert", "certID", "NPaqjKbstooS6JVvbJH6QqCYZzfWBuT0XljlOhaAa2k=");
+  testField("nsSGC-example.pem", "certID", "i66FWM0GJQ1TsA4YIOzvdFUNWiF7gApZ/gXvtxbG9GI=");
 };
