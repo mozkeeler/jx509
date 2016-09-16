@@ -8,8 +8,7 @@
     "test": "node test.js"
   },
   "dependencies": {
-    "atob": "^2.0.3",
-    "btoa": "^1.1.2"
+    "atob": "^2.0.3"
   },
   "devDependencies": {},
   "repository": {

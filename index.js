@@ -1,6 +1,5 @@
 var forge = require('./node-forge/js/forge.js');
 var atob = require('atob');
-var btoa = require('btoa');
 var fs = require('fs');
 
 function signatureOidToHashAlgorithm(signatureOid) {
@@ -311,7 +310,10 @@ function makeCertID(cert) {
   let digest = forge.md.sha256.create();
   digest.update(cert.subjectDER);
   digest.update(cert.spkiDER);
-  return btoa(digest.digest().bytes());
+  let hash = digest.digest().toHex()
+                            .toUpperCase()
+                            .replace(/([A-F0-9]{2})/g, "$1:");
+  return hash.substring(0, hash.length - 1);
 }
 
 exports.x509ToJSON = function(base64) {
@@ -516,6 +518,6 @@ exports.powerOnSelfTest = function() {
   testField("int-nsSGC-old.pem", "technicallyConstrained", "no");
   testField("tc-nsSGC-constrained-old.pem", "technicallyConstrained", "yes");
   testField("tc-nsSGC-constrained-recent.pem", "technicallyConstrained", "yes");
-  testField("EntrustRootCertificationAuthority-EC1.cert", "certID", "NPaqjKbstooS6JVvbJH6QqCYZzfWBuT0XljlOhaAa2k=");
-  testField("nsSGC-example.pem", "certID", "i66FWM0GJQ1TsA4YIOzvdFUNWiF7gApZ/gXvtxbG9GI=");
+  testField("EntrustRootCertificationAuthority-EC1.cert", "certID", "34:F6:AA:8C:A6:EC:B6:8A:12:E8:95:6F:6C:91:FA:42:A0:98:67:37:D6:06:E4:F4:5E:58:E5:3A:16:80:6B:69");
+  testField("nsSGC-example.pem", "certID", "8B:AE:85:58:CD:06:25:0D:53:B0:0E:18:20:EC:EF:74:55:0D:5A:21:7B:80:0A:59:FE:05:EF:B7:16:C6:F4:62");
 };
