@@ -307,10 +307,10 @@ function determineIfTechnicallyConstrained(cert) {
 
 // Returns base64(SHA-256(der(cert.subject) || der(cert.spki)))
 function makeCertID(cert) {
-  let digest = forge.md.sha256.create();
+  var digest = forge.md.sha256.create();
   digest.update(cert.subjectDER);
   digest.update(cert.spkiDER);
-  let hash = digest.digest().toHex()
+  var hash = digest.digest().toHex()
                             .toUpperCase()
                             .replace(/([A-F0-9]{2})/g, "$1:");
   return hash.substring(0, hash.length - 1);
